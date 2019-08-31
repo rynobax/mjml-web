@@ -1,5 +1,4 @@
 import { find, get, identity, map, omit, reduce, isObject, each } from 'lodash'
-import path from 'path'
 import juice from 'juice'
 import { html as htmlBeautify } from 'js-beautify'
 import { minify as htmlMinify } from 'html-minifier'
@@ -29,16 +28,6 @@ class ValidationError extends Error {
 export default function mjml2html(mjml, options = {}) {
   let content = ''
   let errors = []
-
-  if (typeof options.skeleton === 'string') {
-    /* eslint-disable global-require */
-    /* eslint-disable import/no-dynamic-require */
-    options.skeleton = require(options.skeleton.charAt(0) === '.'
-      ? path.resolve(process.cwd(), options.skeleton)
-      : options.skeleton)
-    /* eslint-enable global-require */
-    /* eslint-enable import/no-dynamic-require */
-  }
 
   const {
     beautify = false,

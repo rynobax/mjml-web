@@ -2,7 +2,7 @@
   "name": "mjml-section",
   "description": "mjml-section",
   "version": "4.4.1",
-  "main": "lib/index.js",
+  "main": "src/index.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mjmlio/mjml.git"

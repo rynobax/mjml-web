@@ -1,57 +1,16 @@
-require('babel-register')
+const mjml2html = require('./web/index');
 
-const mjml2html = require('./packages/mjml/src/index')
-
-const xml = `
+console.log(mjml2html(`
 <mjml>
-    <mj-head>
-        <mj-attributes>
-            <mj-all
-                padding="0px"
-            />
-            <mj-wrapper
-                background-color="yellow"
-                padding="80px"
-            />
-        </mj-attributes>
-    </mj-head>
-    <mj-body>
-        <mj-wrapper>
-            <mj-section>
-                <mj-column>
-                    <mj-text>
-                        lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem
-                    </mj-text>
-                </mj-column>
-            </mj-section>
-        </mj-wrapper>
-    </mj-body>
+  <mj-body>
+    <mj-section>
+      <mj-column>
+        <mj-image width="100px" src="https://mjml.io/assets/img/logo-small.png"></mj-image>
+        <mj-divider border-color="#F45E43"></mj-divider>
+        <mj-text font-size="20px" color="#F45E43" font-family="helvetica">Hello World</mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
 </mjml>
-`
 
-console.time('mjml2html')
-
-const { html } = mjml2html(xml, {
-  beautify: true,
-  filePath: './test.mjml',
-})
-
-console.timeEnd('mjml2html')
-
-if (process.argv.includes('--output')) {
-  console.log(html)
-}
-
-if (process.argv.includes('--open')) {
-  const opn = require('opn')
-  const path = require('path')
-  const fs = require('fs')
-
-  const testFile = path.resolve(__dirname, './test.html')
-
-  fs.writeFileSync(testFile, html)
-
-  opn(testFile, {
-    wait: false,
-  })
-}
+`));

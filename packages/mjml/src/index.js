@@ -11,27 +11,50 @@ import {
   AccordionTitle,
 } from 'mjml-accordion'
 
-registerComponent(require('mjml-body'))
-registerComponent(require('mjml-head'))
-registerComponent(require('mjml-head-attributes'))
-registerComponent(require('mjml-head-breakpoint'))
-registerComponent(require('mjml-head-font'))
-registerComponent(require('mjml-head-preview'))
-registerComponent(require('mjml-head-style'))
-registerComponent(require('mjml-head-title'))
-registerComponent(require('mjml-hero'))
-registerComponent(require('mjml-button'))
-registerComponent(require('mjml-column'))
-registerComponent(require('mjml-divider'))
-registerComponent(require('mjml-group'))
-registerComponent(require('mjml-image'))
+import Body from 'mjml-body'
+import Head from 'mjml-head'
+import Attributes from 'mjml-head-attributes'
+import Breakpoint from 'mjml-head-breakpoint'
+import Font from 'mjml-head-font'
+import Preview from 'mjml-head-preview'
+import Style from 'mjml-head-style'
+import Title from 'mjml-head-title'
 
-registerComponent(require('mjml-raw'))
-registerComponent(require('mjml-section'))
-registerComponent(require('mjml-spacer'))
-registerComponent(require('mjml-text'))
-registerComponent(require('mjml-table'))
-registerComponent(require('mjml-wrapper'))
+import Hero from 'mjml-hero'
+import Button from 'mjml-button'
+import Column from 'mjml-column'
+import Divider from 'mjml-divider'
+import Group from 'mjml-group'
+import Image from 'mjml-image'
+import Raw from 'mjml-raw'
+import Section from 'mjml-section'
+import Space from 'mjml-spacer'
+import Text from 'mjml-text'
+import Table from 'mjml-table'
+import Wrapper from 'mjml-wrapper'
+
+import Dependencies from './dependencies'
+
+registerComponent(Body)
+registerComponent(Head)
+registerComponent(Attributes)
+registerComponent(Breakpoint)
+registerComponent(Font)
+registerComponent(Preview)
+registerComponent(Style)
+registerComponent(Title)
+registerComponent(Hero)
+registerComponent(Button)
+registerComponent(Column)
+registerComponent(Divider)
+registerComponent(Group)
+registerComponent(Image)
+registerComponent(Raw)
+registerComponent(Section)
+registerComponent(Space)
+registerComponent(Text)
+registerComponent(Table)
+registerComponent(Wrapper)
 
 registerComponent(Social)
 registerComponent(SocialElement)
@@ -44,6 +67,6 @@ registerComponent(AccordionTitle)
 registerComponent(Carousel)
 registerComponent(CarouselImage)
 
-registerDependencies(require('./dependencies'))
+registerDependencies(Dependencies)
 
 export default mjml2html
