@@ -1,6 +1,6 @@
 {
   "name": "@rynobax/mjml-web",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "web/index.js",
   "scripts": {
     "build:watch": "lerna run build --parallel -- -- -w",
