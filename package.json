@@ -13,7 +13,6 @@
   },
   "dependencies": {
     "babel-runtime": "^6.26.0",
-    "html-minifier": "^4.0.0",
     "js-beautify": "^1.10.2",
     "juice": "^5.2.0",
     "lodash": "^4.17.15",

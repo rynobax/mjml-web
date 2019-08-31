@@ -12,7 +12,6 @@ var _ = require('lodash');
 var ___default = _interopDefault(_);
 var juice = _interopDefault(require('juice'));
 var jsBeautify = require('js-beautify');
-var htmlMinifier = require('html-minifier');
 var htmlparser = _interopDefault(require('htmlparser2'));
 var isObject = _interopDefault(require('lodash/isObject'));
 var findLastIndex = _interopDefault(require('lodash/findLastIndex'));
@@ -1439,7 +1438,6 @@ function mjml2html(mjml) {
       _options$minify = options.minify,
       minify = _options$minify === undefined ? false : _options$minify,
       _options$minifyOption = options.minifyOptions,
-      minifyOptions = _options$minifyOption === undefined ? {} : _options$minifyOption,
       _options$juiceOptions = options.juiceOptions,
       juiceOptions = _options$juiceOptions === undefined ? {} : _options$juiceOptions,
       _options$juicePreserv = options.juicePreserveTags,
@@ -1654,15 +1652,6 @@ function mjml2html(mjml) {
     max_preserve_newline: 0,
     preserve_newlines: false
   }) : content;
-
-  if (minify && minify !== 'false') {
-    content = htmlMinifier.minify(content, _extends({
-      collapseWhitespace: true,
-      minifyCSS: false,
-      caseSensitive: true,
-      removeEmptyAttributes: true
-    }, minifyOptions));
-  }
 
   content = mergeOutlookConditionnals(content);
 

@@ -1,7 +1,6 @@
 import { find, get, identity, map, omit, reduce, isObject, each } from 'lodash'
 import juice from 'juice'
 import { html as htmlBeautify } from 'js-beautify'
-import { minify as htmlMinify } from 'html-minifier'
 
 import MJMLParser from 'mjml-parser-xml'
 import MJMLValidator from 'mjml-validator'
@@ -276,16 +275,6 @@ export default function mjml2html(mjml, options = {}) {
           preserve_newlines: false,
         })
       : content
-
-  if (minify && minify !== 'false') {
-    content = htmlMinify(content, {
-      collapseWhitespace: true,
-      minifyCSS: false,
-      caseSensitive: true,
-      removeEmptyAttributes: true,
-      ...minifyOptions,
-    })
-  }
 
   content = mergeOutlookConditionnals(content)
 
