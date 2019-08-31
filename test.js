@@ -1,4 +1,4 @@
-const mjml2html = require('./src/index');
+const mjml2html = require('./web/index');
 
 console.log(mjml2html(`
 <mjml>

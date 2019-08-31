@@ -1425,14 +1425,6 @@ function mjml2html(mjml) {
   var content = '';
   var errors = [];
 
-  // if (typeof options.skeleton === 'string') {
-  //   /* eslint-disable global-require */
-  //   /* eslint-disable import/no-dynamic-require */
-  //   options.skeleton = require(options.skeleton)
-  //   /* eslint-enable global-require */
-  //   /* eslint-enable import/no-dynamic-require */
-  // }
-
   var _options$beautify = options.beautify,
       beautify = _options$beautify === undefined ? false : _options$beautify,
       _options$fonts = options.fonts,

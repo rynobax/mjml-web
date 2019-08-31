@@ -1,6 +1,6 @@
 {
   "name": "mjml-web",
-  "private": true,
+  "main": "web/index.js",
   "scripts": {
     "build:watch": "lerna run build --parallel -- -- -w",
     "build": "lerna run build --parallel",
@@ -9,6 +9,14 @@
     "postinstall": "lerna bootstrap",
     "prettier": "prettier --write \"packages/**/{src,bin}/**/*.?(js|json)\"",
     "build:web": "rollup -c"
+  },
+  "dependencies": {
+    "babel-runtime": "^6.26.0",
+    "html-minifier": "^4.0.0",
+    "js-beautify": "^1.10.2",
+    "juice": "^5.2.0",
+    "lodash": "^4.17.15",
+    "warning": "^4.0.3"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
