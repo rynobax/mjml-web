@@ -18,7 +18,6 @@ var htmlparser = _interopDefault(require('htmlparser2'));
 var isObject = _interopDefault(require('lodash/isObject'));
 var findLastIndex = _interopDefault(require('lodash/findLastIndex'));
 var find = _interopDefault(require('lodash/find'));
-var fs = _interopDefault(require('fs'));
 var filter = _interopDefault(require('lodash/fp/filter'));
 var map = _interopDefault(require('lodash/fp/map'));
 var flow = _interopDefault(require('lodash/fp/flow'));
@@ -127,95 +126,13 @@ function MJMLParser(xml) {
     return component.getTagName();
   }))(_extends({}, components));
 
-  var cwd = filePath ? path.dirname(filePath) : process.cwd();
-
   var mjml = null;
   var cur = null;
   var inInclude = !!includedIn.length;
   var inEndingTag = 0;
   var currentEndingTagIndexes = { startIndex: 0, endIndex: 0 };
 
-  var findTag = function findTag(tagName, tree) {
-    return find(tree.children, { tagName: tagName });
-  };
   var lineIndexes = indexesForNewLine(xml);
-
-  var handleInclude = function handleInclude(file, line) {
-    var partialPath = path.resolve(cwd, file);
-    var curBeforeInclude = cur;
-
-    if (find(cur.includedIn, { file: partialPath })) throw new Error('Circular inclusion detected on file : ' + partialPath);
-
-    var content = void 0;
-
-    try {
-      content = fs.readFileSync(partialPath, 'utf8');
-    } catch (e) {
-      var newNode = {
-        line: line,
-        file: file,
-        absoluteFilePath: path.resolve(cwd, filePath),
-        parent: cur,
-        tagName: 'mj-raw',
-        content: '<!-- mj-include fails to read file : ' + file + ' at ' + partialPath + ' -->',
-        children: []
-      };
-      cur.children.push(newNode);
-
-      return;
-    }
-
-    content = content.indexOf('<mjml>') === -1 ? '<mjml><mj-body>' + content + '</mj-body></mjml>' : content;
-
-    var partialMjml = MJMLParser(content, _extends({}, options, {
-      filePath: partialPath
-    }), [].concat(_toConsumableArray(cur.includedIn), [{
-      file: cur.absoluteFilePath,
-      line: line
-    }]));
-
-    var bindToTree = function bindToTree(children) {
-      var tree = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : cur;
-      return children.map(function (c) {
-        return _extends({}, c, { parent: tree });
-      });
-    };
-
-    if (partialMjml.tagName !== 'mjml') {
-      return;
-    }
-
-    var body = findTag('mj-body', partialMjml);
-    var head = findTag('mj-head', partialMjml);
-
-    if (body) {
-      var boundChildren = bindToTree(body.children);
-      cur.children = [].concat(_toConsumableArray(cur.children), _toConsumableArray(boundChildren));
-    }
-
-    if (head) {
-      var curHead = findTag('mj-head', mjml);
-
-      if (!curHead) {
-        mjml.children.push({
-          file: filePath,
-          absoluteFilePath: path.resolve(cwd, filePath),
-          parent: mjml,
-          tagName: 'mj-head',
-          children: [],
-          includedIn: []
-        });
-
-        curHead = findTag('mj-head', mjml);
-      }
-
-      var _boundChildren = bindToTree(head.children, curHead);
-      curHead.children = [].concat(_toConsumableArray(curHead.children), _toConsumableArray(_boundChildren));
-    }
-
-    // must restore cur to the cur before include started
-    cur = curBeforeInclude;
-  };
 
   var parser = new htmlparser.Parser({
     onopentag: function onopentag(name, attrs) {
@@ -242,7 +159,6 @@ function MJMLParser(xml) {
 
       if (name === 'mj-include' && !ignoreIncludes) {
         inInclude = true;
-        handleInclude(decodeURIComponent(attrs.path), line);
         return;
       }
 
@@ -253,7 +169,7 @@ function MJMLParser(xml) {
 
       var newNode = {
         file: filePath,
-        absoluteFilePath: path.resolve(cwd, filePath),
+        absoluteFilePath: '',
         line: line,
         includedIn: includedIn,
         parent: cur,
