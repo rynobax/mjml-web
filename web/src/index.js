@@ -10,12 +10,15 @@ var _possibleConstructorReturn = _interopDefault(require('babel-runtime/helpers/
 var _inherits = _interopDefault(require('babel-runtime/helpers/inherits'));
 var _ = require('lodash');
 var ___default = _interopDefault(_);
+var path = _interopDefault(require('path'));
 var juice = _interopDefault(require('juice'));
 var jsBeautify = require('js-beautify');
 var htmlMinifier = require('html-minifier');
 var htmlparser = _interopDefault(require('htmlparser2'));
 var isObject = _interopDefault(require('lodash/isObject'));
 var findLastIndex = _interopDefault(require('lodash/findLastIndex'));
+var find = _interopDefault(require('lodash/find'));
+var fs = _interopDefault(require('fs'));
 var filter = _interopDefault(require('lodash/fp/filter'));
 var map = _interopDefault(require('lodash/fp/map'));
 var flow = _interopDefault(require('lodash/fp/flow'));
@@ -32,7 +35,6 @@ var kebabCase = _interopDefault(require('lodash/kebabCase'));
 var map$1 = _interopDefault(require('lodash/map'));
 var _createClass = _interopDefault(require('babel-runtime/helpers/createClass'));
 var some = _interopDefault(require('lodash/some'));
-var find = _interopDefault(require('lodash/find'));
 var escapeRegExp = _interopDefault(require('lodash/escapeRegExp'));
 var _defineProperty = _interopDefault(require('babel-runtime/helpers/defineProperty'));
 var crypto = _interopDefault(require('crypto'));
@@ -112,7 +114,11 @@ function MJMLParser(xml) {
       _options$convertBoole = options.convertBooleans,
       convertBooleans = _options$convertBoole === undefined ? true : _options$convertBoole,
       _options$keepComments = options.keepComments,
-      keepComments = _options$keepComments === undefined ? true : _options$keepComments;
+      keepComments = _options$keepComments === undefined ? true : _options$keepComments,
+      _options$filePath = options.filePath,
+      filePath = _options$filePath === undefined ? '.' : _options$filePath,
+      _options$ignoreInclud = options.ignoreIncludes,
+      ignoreIncludes = _options$ignoreInclud === undefined ? false : _options$ignoreInclud;
 
 
   var endingTags = flow(filter(function (component) {
@@ -121,12 +127,95 @@ function MJMLParser(xml) {
     return component.getTagName();
   }))(_extends({}, components));
 
+  var cwd = filePath ? path.dirname(filePath) : process.cwd();
+
   var mjml = null;
   var cur = null;
+  var inInclude = !!includedIn.length;
   var inEndingTag = 0;
   var currentEndingTagIndexes = { startIndex: 0, endIndex: 0 };
 
+  var findTag = function findTag(tagName, tree) {
+    return find(tree.children, { tagName: tagName });
+  };
   var lineIndexes = indexesForNewLine(xml);
+
+  var handleInclude = function handleInclude(file, line) {
+    var partialPath = path.resolve(cwd, file);
+    var curBeforeInclude = cur;
+
+    if (find(cur.includedIn, { file: partialPath })) throw new Error('Circular inclusion detected on file : ' + partialPath);
+
+    var content = void 0;
+
+    try {
+      content = fs.readFileSync(partialPath, 'utf8');
+    } catch (e) {
+      var newNode = {
+        line: line,
+        file: file,
+        absoluteFilePath: path.resolve(cwd, filePath),
+        parent: cur,
+        tagName: 'mj-raw',
+        content: '<!-- mj-include fails to read file : ' + file + ' at ' + partialPath + ' -->',
+        children: []
+      };
+      cur.children.push(newNode);
+
+      return;
+    }
+
+    content = content.indexOf('<mjml>') === -1 ? '<mjml><mj-body>' + content + '</mj-body></mjml>' : content;
+
+    var partialMjml = MJMLParser(content, _extends({}, options, {
+      filePath: partialPath
+    }), [].concat(_toConsumableArray(cur.includedIn), [{
+      file: cur.absoluteFilePath,
+      line: line
+    }]));
+
+    var bindToTree = function bindToTree(children) {
+      var tree = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : cur;
+      return children.map(function (c) {
+        return _extends({}, c, { parent: tree });
+      });
+    };
+
+    if (partialMjml.tagName !== 'mjml') {
+      return;
+    }
+
+    var body = findTag('mj-body', partialMjml);
+    var head = findTag('mj-head', partialMjml);
+
+    if (body) {
+      var boundChildren = bindToTree(body.children);
+      cur.children = [].concat(_toConsumableArray(cur.children), _toConsumableArray(boundChildren));
+    }
+
+    if (head) {
+      var curHead = findTag('mj-head', mjml);
+
+      if (!curHead) {
+        mjml.children.push({
+          file: filePath,
+          absoluteFilePath: path.resolve(cwd, filePath),
+          parent: mjml,
+          tagName: 'mj-head',
+          children: [],
+          includedIn: []
+        });
+
+        curHead = findTag('mj-head', mjml);
+      }
+
+      var _boundChildren = bindToTree(head.children, curHead);
+      curHead.children = [].concat(_toConsumableArray(curHead.children), _toConsumableArray(_boundChildren));
+    }
+
+    // must restore cur to the cur before include started
+    cur = curBeforeInclude;
+  };
 
   var parser = new htmlparser.Parser({
     onopentag: function onopentag(name, attrs) {
@@ -151,12 +240,20 @@ function MJMLParser(xml) {
         return i <= parser.startIndex;
       }) + 1;
 
+      if (name === 'mj-include' && !ignoreIncludes) {
+        inInclude = true;
+        handleInclude(decodeURIComponent(attrs.path), line);
+        return;
+      }
+
       if (convertBooleans) {
         // "true" and "false" will be converted to bools
         attrs = convertBooleansOnAttrs(attrs);
       }
 
       var newNode = {
+        file: filePath,
+        absoluteFilePath: path.resolve(cwd, filePath),
         line: line,
         includedIn: includedIn,
         parent: cur,
@@ -188,6 +285,16 @@ function MJMLParser(xml) {
           }
         }
       }
+
+      if (inEndingTag > 0) return;
+
+      if (inInclude) {
+        inInclude = false;
+      }
+
+      // for includes, setting cur is handled in handleInclude because when there is
+      // only mj-head in include it doesn't create any elements, so setting back to parent is wrong
+      if (name !== 'mj-include') cur = cur && cur.parent || null;
     },
     ontext: function ontext(text) {
       if (inEndingTag > 0) return;
@@ -1014,6 +1121,101 @@ var Type = function () {
   return Type;
 }();
 
+function readMjmlConfig() {
+  var configPathOrDir = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : process.cwd();
+
+  var componentRootPath = process.cwd();
+  var mjmlConfigPath = configPathOrDir;
+  try {
+    mjmlConfigPath = path.basename(configPathOrDir) === '.mjmlconfig' ? path.resolve(configPathOrDir) : path.resolve(configPathOrDir, '.mjmlconfig');
+    componentRootPath = path.dirname(mjmlConfigPath);
+    var mjmlConfig = JSON.parse(fs.readFileSync(path.resolve(mjmlConfigPath), 'utf8'));
+    return { mjmlConfig: mjmlConfig, componentRootPath: componentRootPath };
+  } catch (e) {
+    if (e.code !== 'ENOENT') {
+      console.error('Error reading mjmlconfig : ', e); // eslint-disable-line no-console
+    }
+    return { mjmlConfig: { packages: [] }, mjmlConfigPath: mjmlConfigPath, componentRootPath: componentRootPath, error: e };
+  }
+}
+
+function resolveComponentPath(compPath, componentRootPath) {
+  if (!compPath) {
+    return null;
+  }
+  if (!compPath.startsWith('.') && !path.isAbsolute(compPath)) {
+    try {
+      return require.resolve(compPath);
+    } catch (e) {
+      if (e.code !== 'MODULE_NOT_FOUND') {
+        console.error('Error resolving custom component path : ', e); // eslint-disable-line no-console
+        return null;
+      }
+      // we got a 'MODULE_NOT_FOUND' error
+      try {
+        // try again as relative path to node_modules: (this may be necessary if mjml is installed globally or by npm link)
+        return resolveComponentPath('./node_modules/' + compPath, componentRootPath);
+      } catch (e) {
+        //  try again as a plain local path:
+        return resolveComponentPath('./' + compPath, componentRootPath);
+      }
+    }
+  }
+  return require.resolve(path.resolve(componentRootPath, compPath));
+}
+
+function registerCustomComponent(comp) {
+  var registerCompFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : registerComponent;
+
+  if (comp instanceof Function) {
+    registerCompFn(comp);
+  } else {
+    var compNames = _Object$keys(comp); // this approach handles both an array and an object (like the mjml-accordion default export)
+    compNames.forEach(function (compName) {
+      registerCustomComponent(comp[compName], registerCompFn);
+    });
+  }
+}
+
+function handleMjmlConfig() {
+  var configPathOrDir = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : process.cwd();
+  var registerCompFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : registerComponent;
+
+  var _readMjmlConfig = readMjmlConfig(configPathOrDir),
+      packages = _readMjmlConfig.mjmlConfig.packages,
+      componentRootPath = _readMjmlConfig.componentRootPath,
+      error = _readMjmlConfig.error;
+
+  if (error) return { error: error };
+
+  var result = {
+    success: [],
+    failures: []
+  };
+
+  packages.forEach(function (compPath) {
+    var resolvedPath = compPath;
+    try {
+      resolvedPath = resolveComponentPath(compPath, componentRootPath);
+      if (resolvedPath) {
+        var requiredComp = require(resolvedPath); // eslint-disable-line global-require, import/no-dynamic-require
+        registerCustomComponent(requiredComp.default || requiredComp, registerCompFn);
+        registerDependencies((requiredComp.default || requiredComp).dependencies);
+        result.success.push(compPath);
+      }
+    } catch (e) {
+      result.failures.push({ error: e, compPath: compPath });
+      if (e.code === 'ENOENT' || e.code === 'MODULE_NOT_FOUND') {
+        console.error('Missing or unreadable custom component : ', resolvedPath); // eslint-disable-line no-console
+      } else {
+        console.error('Error when registering custom component : ', resolvedPath, e); // eslint-disable-line no-console
+      }
+    }
+  });
+
+  return result;
+}
+
 function shorthandParser (cssValue, direction) {
   var splittedCssValue = cssValue.split(' ');
   var directions = {};
@@ -1397,7 +1599,7 @@ function mjml2html(mjml) {
   if (typeof options.skeleton === 'string') {
     /* eslint-disable global-require */
     /* eslint-disable import/no-dynamic-require */
-    options.skeleton = require(options.skeleton);
+    options.skeleton = require(options.skeleton.charAt(0) === '.' ? path.resolve(process.cwd(), options.skeleton) : options.skeleton);
     /* eslint-enable global-require */
     /* eslint-enable import/no-dynamic-require */
   }
@@ -1427,9 +1629,14 @@ function mjml2html(mjml) {
       validationLevel = _options$validationLe === undefined ? 'soft' : _options$validationLe,
       _options$filePath = options.filePath,
       filePath = _options$filePath === undefined ? '.' : _options$filePath,
+      _options$mjmlConfigPa = options.mjmlConfigPath,
+      mjmlConfigPath = _options$mjmlConfigPa === undefined ? null : _options$mjmlConfigPa,
       _options$noMigrateWar = options.noMigrateWarn,
       noMigrateWarn = _options$noMigrateWar === undefined ? false : _options$noMigrateWar;
 
+  // if mjmlConfigPath is specified then we need to handle it on each call
+
+  if (mjmlConfigPath) handleMjmlConfig(mjmlConfigPath, registerComponent);
 
   if (typeof mjml === 'string') {
     mjml = MJMLParser(mjml, {
@@ -1648,6 +1855,8 @@ function mjml2html(mjml) {
     errors: errors
   };
 }
+
+handleMjmlConfig(process.cwd(), registerComponent);
 
 var _class$1, _temp$1;
 
