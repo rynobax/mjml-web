@@ -4,9 +4,11 @@
   "scripts": {
     "build:watch": "lerna run build --parallel -- -- -w",
     "build": "lerna run build --parallel",
+    "clean": "lerna run clean --parallel",
     "lint": "eslint .",
     "postinstall": "lerna bootstrap",
-    "prettier": "prettier --write \"packages/**/{src,bin}/**/*.?(js|json)\""
+    "prettier": "prettier --write \"packages/**/{src,bin}/**/*.?(js|json)\"",
+    "build:web": "rollup -c"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
@@ -28,6 +30,10 @@
     "lerna": "^2.11.0",
     "opn": "^5.1.0",
     "prettier": "^1.7.3",
-    "rimraf": "^2.6.1"
+    "rimraf": "^2.6.1",
+    "rollup": "^1.20.3",
+    "rollup-plugin-babel": "3",
+    "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-node-resolve": "^5.2.0"
   }
 }
