@@ -10,7 +10,6 @@ var _possibleConstructorReturn = _interopDefault(require('babel-runtime/helpers/
 var _inherits = _interopDefault(require('babel-runtime/helpers/inherits'));
 var _ = require('lodash');
 var ___default = _interopDefault(_);
-var path = _interopDefault(require('path'));
 var juice = _interopDefault(require('juice'));
 var jsBeautify = require('js-beautify');
 var htmlMinifier = require('html-minifier');
@@ -1426,13 +1425,13 @@ function mjml2html(mjml) {
   var content = '';
   var errors = [];
 
-  if (typeof options.skeleton === 'string') {
-    /* eslint-disable global-require */
-    /* eslint-disable import/no-dynamic-require */
-    options.skeleton = require(options.skeleton.charAt(0) === '.' ? path.resolve(process.cwd(), options.skeleton) : options.skeleton);
-    /* eslint-enable global-require */
-    /* eslint-enable import/no-dynamic-require */
-  }
+  // if (typeof options.skeleton === 'string') {
+  //   /* eslint-disable global-require */
+  //   /* eslint-disable import/no-dynamic-require */
+  //   options.skeleton = require(options.skeleton)
+  //   /* eslint-enable global-require */
+  //   /* eslint-enable import/no-dynamic-require */
+  // }
 
   var _options$beautify = options.beautify,
       beautify = _options$beautify === undefined ? false : _options$beautify,
