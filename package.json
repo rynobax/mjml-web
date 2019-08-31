@@ -1,5 +1,5 @@
 {
-  "name": "mjml-web",
+  "name": "@rynobax/mjml-web",
   "main": "web/index.js",
   "scripts": {
     "build:watch": "lerna run build --parallel -- -- -w",
