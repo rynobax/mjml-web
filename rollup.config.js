@@ -5,12 +5,12 @@ import babel from 'rollup-plugin-babel'
 export default {
   input: 'packages/mjml-core/src/index.js',
   output: {
-    file: 'bundle.js',
-    format: 'umd',
+    file: 'web/src/index.js',
+    format: 'cjs',
   },
   plugins: [
     babel({ runtimeHelpers: true }),
-    // commonjs(),
+    commonjs(),
     resolve({ only: [/^mjml.*$/ ] }),
   ],
 }

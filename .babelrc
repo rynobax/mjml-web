@@ -4,7 +4,7 @@
     "stage-0"
   ],
   "plugins": [
-    "add-module-exports",
+    // "add-module-exports",
     "transform-regenerator",
     "transform-decorators-legacy",
     "transform-async-to-generator",
