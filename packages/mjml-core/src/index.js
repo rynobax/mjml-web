@@ -1,5 +1,4 @@
 import { find, get, identity, map, omit, reduce, isObject, each } from 'lodash'
-import path from 'path'
 import juice from 'juice'
 import { html as htmlBeautify } from 'js-beautify'
 import { minify as htmlMinify } from 'html-minifier'
@@ -16,8 +15,6 @@ import minifyOutlookConditionnals from './helpers/minifyOutlookConditionnals'
 import defaultSkeleton from './helpers/skeleton'
 import { initializeType } from './types/type'
 
-import handleMjmlConfig from './helpers/mjmlconfig'
-
 class ValidationError extends Error {
   constructor(message, errors) {
     super(message)
@@ -33,9 +30,7 @@ export default function mjml2html(mjml, options = {}) {
   if (typeof options.skeleton === 'string') {
     /* eslint-disable global-require */
     /* eslint-disable import/no-dynamic-require */
-    options.skeleton = require(options.skeleton.charAt(0) === '.'
-      ? path.resolve(process.cwd(), options.skeleton)
-      : options.skeleton)
+    options.skeleton = require(options.skeleton)
     /* eslint-enable global-require */
     /* eslint-enable import/no-dynamic-require */
   }
@@ -59,12 +54,8 @@ export default function mjml2html(mjml, options = {}) {
     skeleton = defaultSkeleton,
     validationLevel = 'soft',
     filePath = '.',
-    mjmlConfigPath = null,
     noMigrateWarn = false,
   } = options
-
-  // if mjmlConfigPath is specified then we need to handle it on each call
-  if (mjmlConfigPath) handleMjmlConfig(mjmlConfigPath, registerComponent)
 
   if (typeof mjml === 'string') {
     mjml = MJMLParser(mjml, {
@@ -239,11 +230,9 @@ export default function mjml2html(mjml, options = {}) {
         }
       } else {
         throw Error(
-          `An mj-head element add an unkown head attribute : ${attr} with params ${Array.isArray(
-            params,
-          )
-            ? params.join('')
-            : params}`,
+          `An mj-head element add an unkown head attribute : ${attr} with params ${
+            Array.isArray(params) ? params.join('') : params
+          }`,
         )
       }
     },
@@ -306,8 +295,12 @@ export default function mjml2html(mjml, options = {}) {
   }
 }
 
-handleMjmlConfig(process.cwd(), registerComponent)
-
-export { components, initComponent, registerComponent, suffixCssClasses, handleMjmlConfig, initializeType }
+export {
+  components,
+  initComponent,
+  registerComponent,
+  suffixCssClasses,
+  initializeType,
+}
 
 export { BodyComponent, HeadComponent } from './createComponent'
