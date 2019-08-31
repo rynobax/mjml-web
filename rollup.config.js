@@ -3,7 +3,7 @@ import resolve from 'rollup-plugin-node-resolve'
 import babel from 'rollup-plugin-babel'
 
 export default {
-  input: 'packages/mjml-core/src/index.js',
+  input: 'packages/mjml/src/index.js',
   output: {
     file: 'web/src/index.js',
     format: 'cjs',
